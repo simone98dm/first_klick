@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="First Klick — A GPS running tracker with Bluetooth heart rate monitoring and Strava integration, built with Flutter." />
+  <meta property="og:title" content="First Klick — GPS Run Tracker" />
+  <meta property="og:description" content="GPS running tracker with BLE heart rate monitoring and Strava upload. Built with Flutter." />
+  <meta property="og:type" content="website" />
+  <title>First Klick — GPS Run Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:              #0D0D0D;
+      --surface:         #1A1A1A;
+      --surface-el:      #242424;
+      --divider:         #2C2C2C;
+      --accent:          #00E5FF;
+      --accent-dim:      #00B0CC;
+      --text:            #FFFFFF;
+      --text-sec:        #9E9E9E;
+      --text-dis:        #555555;
+      --success:         #4CAF50;
+      --error:           #FF5252;
+      --warning:         #FFBB00;
+      --strava:          #FC4C02;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── SCROLLBAR ────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--divider); border-radius: 3px; }
+
+    /* ─── NAV ──────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2.5rem;
+      background: rgba(13,13,13,0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .nav-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: var(--text);
+    }
+    .nav-logo-icon {
+      width: 30px; height: 30px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-logo-icon svg { width: 18px; height: 18px; }
+    .nav-logo span { font-size: 15px; font-weight: 600; letter-spacing: 0.2px; }
+
+    .nav-links { display: flex; align-items: center; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--text-sec); text-decoration: none;
+      font-size: 14px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links .nav-btn {
+      color: var(--accent) !important;
+      border: 1px solid rgba(0,229,255,0.4);
+      padding: 7px 18px; border-radius: 8px;
+      transition: background 0.2s, color 0.2s !important;
+    }
+    .nav-links .nav-btn:hover {
+      background: var(--accent); color: var(--bg) !important;
+    }
+
+    /* ─── HERO ─────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      padding: 96px 2rem 6rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-glow {
+      position: absolute; top: -100px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0,229,255,0.07) 0%, transparent 65%);
+      pointer-events: none;
+    }
+    .hero-grid-bg {
+      position: absolute; inset: 0; pointer-events: none; opacity: 0.03;
+      background-image:
+        linear-gradient(var(--text) 1px, transparent 1px),
+        linear-gradient(90deg, var(--text) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(0,229,255,0.07);
+      border: 1px solid rgba(0,229,255,0.2);
+      color: var(--accent);
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 1.4px; text-transform: uppercase;
+      padding: 6px 14px; border-radius: 100px;
+      margin-bottom: 2.2rem;
+    }
+    .hero-badge-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      animation: blink 2.4s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+
+    .hero h1 {
+      font-size: clamp(60px, 11vw, 108px);
+      font-weight: 200;
+      letter-spacing: -4px;
+      line-height: 0.95;
+      margin-bottom: 1.6rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+
+    .hero-tagline {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-sec);
+      font-weight: 400; line-height: 1.7;
+      max-width: 540px;
+      margin-bottom: 2.8rem;
+    }
+
+    .hero-chips {
+      display: flex; flex-wrap: wrap; gap: 10px;
+      justify-content: center;
+      margin-bottom: 4.5rem;
+    }
+    .chip {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px; font-weight: 500;
+      color: var(--text-sec);
+    }
+    .chip .chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ─── PHONE MOCK ───────────────────────────────── */
+    .phone-wrap {
+      position: relative;
+      display: inline-block;
+    }
+    .phone-wrap::before {
+      content: '';
+      position: absolute; inset: -40px; border-radius: 60px;
+      background: radial-gradient(ellipse, rgba(0,229,255,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .phone {
+      width: 260px; height: 520px;
+      background: var(--surface);
+      border-radius: 36px;
+      border: 2px solid #333;
+      overflow: hidden;
+      position: relative;
+      box-shadow:
+        0 60px 120px rgba(0,0,0,0.6),
+        0 0 0 1px rgba(255,255,255,0.04) inset;
+      display: flex; flex-direction: column;
+    }
+
+    .phone-notch {
+      position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+      width: 70px; height: 6px;
+      background: #333; border-radius: 3px;
+      z-index: 10;
+    }
+
+    .phone-map {
+      flex: 1;
+      background: #121820;
+      position: relative;
+      overflow: hidden;
+    }
+    .phone-map-grid {
+      position: absolute; inset: 0; opacity: 0.18;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* SVG route line drawn in JS-free SVG */
+    .phone-route {
+      position: absolute; inset: 0;
+    }
+
+    .phone-location-dot {
+      position: absolute;
+      bottom: 40%; left: 52%;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px rgba(0,229,255,0.25), 0 0 0 8px rgba(0,229,255,0.08);
+    }
+
+    .phone-hud {
+      background: var(--surface);
+      padding: 14px 18px 18px;
+      border-top: 1px solid var(--divider);
+    }
+    .phone-time {
+      font-size: 42px;
+      font-weight: 200;
+      letter-spacing: -2px;
+      color: var(--text);
+      line-height: 1;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .phone-metrics {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+    .phone-metric { text-align: center; }
+    .phone-metric-val {
+      font-size: 17px; font-weight: 300;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+      display: block;
+    }
+    .phone-metric-lbl {
+      font-size: 8px; font-weight: 600;
+      color: var(--text-dis);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+    .phone-controls {
+      display: flex; gap: 10px; margin-top: 12px; justify-content: center;
+    }
+    .phone-btn {
+      flex: 1; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px;
+    }
+    .phone-btn-pause { background: var(--surface-el); color: var(--text-sec); }
+    .phone-btn-stop  { background: rgba(255,82,82,0.15); color: var(--error); }
+
+    /* ─── SECTION COMMONS ──────────────────────────── */
+    section { padding: 100px 2rem; }
+    .container { max-width: 1080px; margin: 0 auto; }
+
+    .sec-eyebrow {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 1.6px; text-transform: uppercase;
+      color: var(--accent); margin-bottom: 12px;
+    }
+    .sec-title {
+      font-size: clamp(26px, 4vw, 40px);
+      font-weight: 300; letter-spacing: -1.2px;
+      margin-bottom: 14px; line-height: 1.15;
+    }
+    .sec-sub {
+      font-size: 15px; color: var(--text-sec);
+      max-width: 460px; line-height: 1.75;
+      margin-bottom: 52px;
+    }
+
+    /* ─── FEATURES ─────────────────────────────────── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--divider);
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .feat-card {
+      background: var(--surface);
+      padding: 36px 32px;
+      transition: background 0.25s;
+    }
+    .feat-card:hover { background: var(--surface-el); }
+    .feat-icon {
+      width: 42px; height: 42px;
+      border-radius: 11px;
+      background: rgba(0,229,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .feat-icon svg { width: 20px; height: 20px; }
+    .feat-card h3 {
+      font-size: 15px; font-weight: 600;
+      margin-bottom: 10px;
+    }
+    .feat-card p {
+      font-size: 13px; color: var(--text-sec);
+      line-height: 1.75;
+    }
+    .feat-tag {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 10px; font-weight: 600;
+      letter-spacing: 0.8px; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 100px;
+    }
+    .feat-tag-cyan  { background: rgba(0,229,255,0.1);  color: var(--accent); }
+    .feat-tag-green { background: rgba(76,175,80,0.12); color: var(--success); }
+    .feat-tag-orange{ background: rgba(252,76,2,0.12);  color: var(--strava); }
+    .feat-tag-warn  { background: rgba(255,187,0,0.12); color: var(--warning); }
+
+    /* ─── HOW IT WORKS ─────────────────────────────── */
+    .how-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 2px;
+      background: var(--divider);
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--divider);
+    }
+    .how-card {
+      background: var(--surface);
+      padding: 40px 32px;
+    }
+    .how-num {
+      font-size: 48px; font-weight: 200;
+      color: var(--accent); letter-spacing: -2px;
+      line-height: 1; margin-bottom: 16px;
+      opacity: 0.6;
+    }
+    .how-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 10px; }
+    .how-card p  { font-size: 13px; color: var(--text-sec); line-height: 1.75; }
+
+    /* ─── STACK ────────────────────────────────────── */
+    .stack-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+    }
+    .stack-card {
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 12px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 12px;
+      transition: border-color 0.2s;
+    }
+    .stack-card:hover { border-color: rgba(0,229,255,0.25); }
+    .stack-card .si { font-size: 22px; flex-shrink: 0; }
+    .stack-card h4 { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+    .stack-card span { font-size: 11px; color: var(--text-dis); }
+
+    /* ─── ROADMAP ──────────────────────────────────── */
+    .roadmap-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    .rphase {
+      background: var(--surface);
+      border: 1px solid var(--divider);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    .rphase.current {
+      border-color: rgba(0,229,255,0.28);
+      background: linear-gradient(145deg, rgba(0,229,255,0.04), var(--surface));
+    }
+
+    .rbadge {
+      display: inline-block;
+      font-size: 10px; font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
+      padding: 4px 11px; border-radius: 100px;
+      margin-bottom: 16px;
+    }
+    .rbadge-done   { background: rgba(76,175,80,0.14);  color: var(--success); }
+    .rbadge-now    { background: rgba(0,229,255,0.14);  color: var(--accent);  }
+    .rbadge-future { background: rgba(255,187,0,0.12);  color: var(--warning); }
+
+    .rphase h3 { font-size: 17px; font-weight: 600; margin-bottom: 22px; }
+
+    .rlist { list-style: none; display: flex; flex-direction: column; gap: 13px; }
+    .ritem {
+      display: flex; align-items: flex-start; gap: 10px;
+      font-size: 13px; color: var(--text-sec); line-height: 1.5;
+    }
+    .ri-dot {
+      flex-shrink: 0; width: 16px; height: 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin-top: 2px;
+    }
+    .ri-dot.done {
+      background: var(--success);
+      font-size: 9px; color: white; font-weight: 700;
+    }
+    .ri-dot.todo { border: 1.5px solid var(--divider); }
+    .ri-dot.soon { border: 1.5px solid rgba(255,187,0,0.5); }
+
+    /* ─── BANNER ───────────────────────────────────── */
+    .banner {
+      background: linear-gradient(135deg, rgba(0,229,255,0.08), rgba(0,176,204,0.04));
+      border: 1px solid rgba(0,229,255,0.18);
+      border-radius: 20px;
+      padding: 52px 48px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 2rem; flex-wrap: wrap;
+    }
+    .banner-text h2 {
+      font-size: clamp(22px, 3vw, 32px);
+      font-weight: 300; letter-spacing: -0.8px;
+      margin-bottom: 8px;
+    }
+    .banner-text p { font-size: 14px; color: var(--text-sec); }
+    .banner-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 10px;
+      font-size: 14px; font-weight: 600;
+      text-decoration: none; cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .btn:hover { opacity: 0.85; transform: translateY(-1px); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid var(--divider);
+      color: var(--text-sec);
+    }
+    .btn-ghost:hover { border-color: rgba(255,255,255,0.25); color: var(--text); }
+    .btn svg { width: 16px; height: 16px; }
+
+    /* ─── FOOTER ───────────────────────────────────── */
+    footer {
+      border-top: 1px solid var(--divider);
+      padding: 2.5rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 1rem;
+    }
+    footer p { font-size: 12px; color: var(--text-dis); }
+    .footer-links { display: flex; gap: 1.5rem; }
+    .footer-links a {
+      font-size: 12px; color: var(--text-dis);
+      text-decoration: none; transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--text-sec); }
+
+    /* ─── DIVIDERS / UTILS ─────────────────────────── */
+    .hr { width: 100%; height: 1px; background: var(--divider); }
+
+    /* ─── RESPONSIVE ───────────────────────────────── */
+    @media (max-width: 900px) {
+      .features-grid { grid-template-columns: repeat(2, 1fr); }
+      .roadmap-grid  { grid-template-columns: 1fr; }
+      .how-grid      { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      nav { padding: 0 1.25rem; }
+      .nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .hero { padding: 80px 1.25rem 4rem; }
+      section { padding: 72px 1.25rem; }
+      .banner { padding: 32px 24px; }
+      footer { flex-direction: column; align-items: flex-start; }
+    }
+
+    /* ─── ANIMATIONS ───────────────────────────────── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .hero-badge   { animation: fadeUp 0.5s ease both; }
+    .hero h1      { animation: fadeUp 0.5s 0.1s ease both; }
+    .hero-tagline { animation: fadeUp 0.5s 0.2s ease both; }
+    .hero-chips   { animation: fadeUp 0.5s 0.3s ease both; }
+    .phone-wrap   { animation: fadeUp 0.6s 0.4s ease both; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ════════════════════════════════════════════════ -->
+<nav>
+  <a href="#" class="nav-logo">
+    <div class="nav-logo-icon">
+      <!-- Running figure icon -->
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0D0D0D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M13 4a1 1 0 1 0 2 0 1 1 0 0 0-2 0"/>
+        <path d="M7 21l3-6 3 2 2-4"/>
+        <path d="M10 10l1.5-3 2 1.5 2-2"/>
+        <path d="M6 13l2-1 2 2"/>
+      </svg>
+    </div>
+    <span>First Klick</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="https://github.com" class="nav-btn">GitHub</a></li>
+  </ul>
+</nav>
+
+<!-- ═══ HERO ════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-grid-bg"></div>
+
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Flutter &nbsp;·&nbsp; Open Source
+  </div>
+
+  <h1>First<br><em>Klick</em></h1>
+
+  <p class="hero-tagline">
+    A precision GPS running tracker with Bluetooth heart rate monitoring
+    and seamless Strava integration — built for runners who care about data.
+  </p>
+
+  <div class="hero-chips">
+    <div class="chip">
+      <span class="chip-dot" style="background:var(--accent)"></span>
+      Live GPS Tracking
+    </div>
+    <div class="chip">
+      <span class="chip-dot" style="background:var(--error)"></span>
+      BLE Heart Rate
+    </div>
+    <div class="chip">
+      <span class="chip-dot" style="background:var(--strava)"></span>
+      Strava Upload
+    </div>
+    <div class="chip">
+      <span class="chip-dot" style="background:var(--success)"></span>
+      Offline-first
+    </div>
+    <div class="chip">
+      <span class="chip-dot" style="background:var(--warning)"></span>
+      Auto-pause
+    </div>
+  </div>
+
+  <!-- Phone mockup -->
+  <div class="phone-wrap">
+    <div class="phone">
+      <div class="phone-notch"></div>
+
+      <!-- Map area -->
+      <div class="phone-map">
+        <div class="phone-map-grid"></div>
+        <!-- SVG route line -->
+        <svg class="phone-route" viewBox="0 0 260 310" preserveAspectRatio="none">
+          <!-- Road-like base lines -->
+          <line x1="20" y1="280" x2="240" y2="280" stroke="#222" stroke-width="8"/>
+          <line x1="130" y1="10" x2="130" y2="280" stroke="#222" stroke-width="8"/>
+          <line x1="20" y1="150" x2="240" y2="150" stroke="#222" stroke-width="8"/>
+          <!-- Cyan route -->
+          <polyline
+            points="55,280 55,200 100,200 100,150 130,150 130,110 170,110 170,80 210,80 210,50 180,50 180,80 155,80 155,110 130,110"
+            fill="none" stroke="#00E5FF" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round"
+            opacity="0.9"
+          />
+          <!-- Dashed remaining route -->
+          <polyline
+            points="130,110 110,100 95,90"
+            fill="none" stroke="#00E5FF" stroke-width="2"
+            stroke-dasharray="5,4"
+            stroke-linecap="round" stroke-linejoin="round"
+            opacity="0.4"
+          />
+        </svg>
+        <!-- Location dot at current position -->
+        <div class="phone-location-dot"></div>
+      </div>
+
+      <!-- HUD -->
+      <div class="phone-hud">
+        <div class="phone-time">42:18</div>
+        <div class="phone-metrics">
+          <div class="phone-metric">
+            <span class="phone-metric-val">7.4</span>
+            <span class="phone-metric-lbl">KM</span>
+          </div>
+          <div class="phone-metric">
+            <span class="phone-metric-val">5:42</span>
+            <span class="phone-metric-lbl">/KM</span>
+          </div>
+          <div class="phone-metric">
+            <span class="phone-metric-val" style="color:var(--error)">152</span>
+            <span class="phone-metric-lbl">BPM</span>
+          </div>
+        </div>
+        <div class="phone-controls">
+          <div class="phone-btn phone-btn-pause">⏸</div>
+          <div class="phone-btn phone-btn-stop">■ Stop</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ════════════════════════════════════════════ -->
+<section id="features">
+  <div class="container">
+    <div class="sec-eyebrow">Features</div>
+    <h2 class="sec-title">Everything you need<br>on every run</h2>
+    <p class="sec-sub">From the moment you hit start to the post-run breakdown, First Klick tracks every detail — even when your phone is in your pocket.</p>
+
+    <div class="features-grid">
+
+      <!-- GPS Tracking -->
+      <div class="feat-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="3"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+          </svg>
+        </div>
+        <h3>Live GPS Tracking</h3>
+        <p>High-accuracy location sampling at 3-second intervals with Haversine distance calculation. Your route is drawn in real time on an OpenStreetMap tile layer.</p>
+        <span class="feat-tag feat-tag-cyan">High accuracy</span>
+      </div>
+
+      <!-- Heart Rate -->
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(255,82,82,0.12); color:var(--error)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <h3>BLE Heart Rate Monitor</h3>
+        <p>Pairs with any Bluetooth LE chest strap or wrist sensor via GATT Heart Rate Service. Live BPM streams directly to your screen with automatic reconnection on signal loss.</p>
+        <span class="feat-tag feat-tag-warn">GATT 0x180D</span>
+      </div>
+
+      <!-- Auto-pause -->
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(255,187,0,0.1); color:var(--warning)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="6" y="4" width="4" height="16"/>
+            <rect x="14" y="4" width="4" height="16"/>
+          </svg>
+        </div>
+        <h3>Intelligent Auto-pause</h3>
+        <p>Speed-based hysteresis pauses your timer when you slow below 1.8 km/h — at traffic lights, water stops, or trail crossings — and resumes the moment you're moving again.</p>
+        <span class="feat-tag feat-tag-warn">Smart detection</span>
+      </div>
+
+      <!-- Activity History -->
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(76,175,80,0.1); color:var(--success)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+            <line x1="8" y1="14" x2="8" y2="14"/>
+            <line x1="12" y1="14" x2="12" y2="14"/>
+            <line x1="16" y1="14" x2="16" y2="14"/>
+          </svg>
+        </div>
+        <h3>Activity History</h3>
+        <p>Every run is stored locally with a weekly summary card at the top. Distance, time, and pace are visible at a glance. Works completely offline — no account required.</p>
+        <span class="feat-tag feat-tag-green">Offline-first</span>
+      </div>
+
+      <!-- Activity Detail -->
+      <div class="feat-card">
+        <div class="feat-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+          </svg>
+        </div>
+        <h3>Detailed Analysis</h3>
+        <p>Zoom into any run: route map with auto-fit bounds, kilometre split table with individual paces, elevation gain, and average & peak heart rate — all in one scrollable view.</p>
+        <span class="feat-tag feat-tag-cyan">KM splits</span>
+      </div>
+
+      <!-- Strava -->
+      <div class="feat-card">
+        <div class="feat-icon" style="background:rgba(252,76,2,0.1); color:var(--strava)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <h3>Strava Integration</h3>
+        <p>One-tap OAuth 2.0 connection. Activities are exported as GPX 1.1 and uploaded directly to your Strava profile. Track upload status and disconnect at any time from settings.</p>
+        <span class="feat-tag feat-tag-orange">GPX 1.1</span>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═════════════════════════════════════════ -->
+<section id="how" style="padding-top:0">
+  <div class="container">
+    <div class="sec-eyebrow">How it works</div>
+    <h2 class="sec-title">Track. Store. Share.</h2>
+    <p class="sec-sub">Three layers working together so you never lose a run, even with no connectivity.</p>
+
+    <div class="how-grid">
+      <div class="how-card">
+        <div class="how-num">01</div>
+        <h3>Track in the background</h3>
+        <p>A persistent foreground service keeps GPS and Bluetooth alive even with the screen off. Live stats — pace, distance, BPM — are broadcast to the UI every second via platform channels.</p>
+      </div>
+      <div class="how-card" style="background:var(--surface-el);">
+        <div class="how-num">02</div>
+        <h3>Store locally, always</h3>
+        <p>Every GPS point and heart rate sample is written to SQLite via the Drift ORM — roughly every 3 seconds. Activities are available instantly offline, no cloud sync required.</p>
+      </div>
+      <div class="how-card">
+        <div class="how-num">03</div>
+        <h3>Share when ready</h3>
+        <p>Upload to Strava as a GPX file with one tap, or export a shareable activity card image. Your data stays yours — delete from Strava independently of your local history.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ TECH STACK ═══════════════════════════════════════════ -->
+<section id="stack" style="padding-top:0">
+  <div class="container">
+    <div class="sec-eyebrow">Tech Stack</div>
+    <h2 class="sec-title">Built on proven libraries</h2>
+    <p class="sec-sub">No bloat. Each dependency earns its place.</p>
+
+    <div class="stack-grid">
+      <div class="stack-card">
+        <div class="si">🐦</div>
+        <div><h4>Flutter</h4><span>Cross-platform UI</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🔵</div>
+        <div><h4>Riverpod</h4><span>State management</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🗄️</div>
+        <div><h4>Drift ORM</h4><span>SQLite persistence</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">📡</div>
+        <div><h4>flutter_blue_plus</h4><span>BLE / GATT</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">📍</div>
+        <div><h4>Geolocator</h4><span>GPS streaming</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🗺️</div>
+        <div><h4>flutter_map</h4><span>OpenStreetMap tiles</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">⚙️</div>
+        <div><h4>Background Svc</h4><span>Foreground service</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🔐</div>
+        <div><h4>Secure Storage</h4><span>Token storage</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🌐</div>
+        <div><h4>web_auth_2</h4><span>OAuth 2.0 flow</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">🚀</div>
+        <div><h4>Dio</h4><span>HTTP / Strava API</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">📤</div>
+        <div><h4>share_plus</h4><span>Activity sharing</span></div>
+      </div>
+      <div class="stack-card">
+        <div class="si">⚡</div>
+        <div><h4>Material 3</h4><span>Dark UI system</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ ROADMAP ══════════════════════════════════════════════ -->
+<section id="roadmap">
+  <div class="container">
+    <div class="sec-eyebrow">Roadmap</div>
+    <h2 class="sec-title">What's coming next</h2>
+    <p class="sec-sub">First Klick is under active development. Here's where we've been and where we're heading.</p>
+
+    <div class="roadmap-grid">
+
+      <!-- v1.0 — Shipped -->
+      <div class="rphase">
+        <span class="rbadge rbadge-done">v1.0 — Shipped</span>
+        <h3>Foundation</h3>
+        <ul class="rlist">
+          <li class="ritem"><div class="ri-dot done">✓</div> GPS run tracking with background foreground service</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> BLE heart rate monitor (GATT 0x180D)</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Intelligent auto-pause via speed hysteresis</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Activity history with weekly summary</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Kilometre splits & elevation gain</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Strava OAuth 2.0 & GPX upload</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Share activity as image card</li>
+          <li class="ritem"><div class="ri-dot done">✓</div> Offline-first SQLite storage</li>
+        </ul>
+      </div>
+
+      <!-- v1.5 — Coming soon -->
+      <div class="rphase current">
+        <span class="rbadge rbadge-now">v1.5 — In progress</span>
+        <h3>Training Tools</h3>
+        <ul class="rlist">
+          <li class="ritem"><div class="ri-dot soon"></div> Interval training mode with configurable work/rest rounds</li>
+          <li class="ritem"><div class="ri-dot soon"></div> Voice coaching — real-time audio cues for pace, splits & BPM zones</li>
+          <li class="ritem"><div class="ri-dot soon"></div> Offline map tile download for connectivity-free trails</li>
+          <li class="ritem"><div class="ri-dot soon"></div> Export in FIT and TCX formats for Garmin & Wahoo compatibility</li>
+          <li class="ritem"><div class="ri-dot soon"></div> Apple Watch companion app for wrist controls</li>
+          <li class="ritem"><div class="ri-dot soon"></div> Customisable metrics layout on recording screen</li>
+        </ul>
+      </div>
+
+      <!-- v2.0 — Future -->
+      <div class="rphase">
+        <span class="rbadge rbadge-future">v2.0 — Future</span>
+        <h3>Advanced Performance</h3>
+        <ul class="rlist">
+          <li class="ritem"><div class="ri-dot todo"></div> AI-powered training plans adapting to your fitness level</li>
+          <li class="ritem"><div class="ri-dot todo"></div> VO₂ max estimation & training load score</li>
+          <li class="ritem"><div class="ri-dot todo"></div> Heart rate zone analysis with personalised zones</li>
+          <li class="ritem"><div class="ri-dot todo"></div> Multiple sport types — cycling, hiking, open-water swim</li>
+          <li class="ritem"><div class="ri-dot todo"></div> Social leaderboards, segments, and challenges</li>
+          <li class="ritem"><div class="ri-dot todo"></div> Wear OS companion app</li>
+          <li class="ritem"><div class="ri-dot todo"></div> Weather-aware run recommendations</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CTA BANNER ══════════════════════════════════════════ -->
+<section style="padding-top:0">
+  <div class="container">
+    <div class="banner">
+      <div class="banner-text">
+        <h2>Open source and built in public</h2>
+        <p>Every commit is visible. Contributions, issues, and feedback are welcome.</p>
+      </div>
+      <div class="banner-actions">
+        <a href="https://github.com" class="btn btn-primary">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.44 9.8 8.2 11.38.6.11.82-.26.82-.58v-2.03c-3.34.73-4.04-1.6-4.04-1.6-.55-1.4-1.34-1.77-1.34-1.77-1.09-.74.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.8 1.3 3.49 1 .1-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.18 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 3-.4c1.02.005 2.04.138 3 .4 2.28-1.55 3.3-1.23 3.3-1.23.66 1.66.24 2.88.12 3.18.77.84 1.24 1.91 1.24 3.22 0 4.61-2.8 5.63-5.48 5.92.43.37.82 1.1.82 2.22v3.29c0 .32.22.7.83.58C20.57 21.8 24 17.3 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          View on GitHub
+        </a>
+        <a href="#features" class="btn btn-ghost">Explore features</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══════════════════════════════════════════════ -->
+<footer>
+  <p>© 2026 First Klick — Built with Flutter &amp; ❤️</p>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#roadmap">Roadmap</a>
+    <a href="https://github.com">GitHub</a>
+    <a href="https://flutter.dev">Flutter</a>
+  </div>
+</footer>
+
+</body>
+</html>
