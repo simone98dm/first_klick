@@ -13,6 +13,8 @@ A Flutter app that records runs with GPS, connects to a Bluetooth heart rate mon
 - Interactive live map (OpenStreetMap, no API key required)
 - SQLite storage via Drift
 - Strava OAuth 2.0 upload (GPX)
+- Calendar home screen — monthly view with activity dot-markers and tap-to-preview
+- Two-tab navigation (Calendar / Activities) with a centre-docked FAB
 
 ---
 
@@ -65,7 +67,8 @@ lib/
     gps/                      # Geolocator + Haversine
     strava/                   # OAuth, token storage, API client, GPX
   features/
-    home/                     # Activity list
+    home/                     # Shell: calendar tab + bottom nav + centre FAB
+    activities/               # Activity list tab (extracted from home)
     recording/                # Live recording screen
     activity_detail/          # Detail + splits + upload
     settings/                 # Strava connect + BLE scan modal
